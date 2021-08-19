@@ -15,3 +15,12 @@
 .legal{
     cursor: pointer;
 }
+
+.player0{
+    background-color: red;
+}
+
+.player1{
+    background-color: blue;
+}
+
