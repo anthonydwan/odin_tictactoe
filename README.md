@@ -1,2 +1,2 @@
-# odin_tictactoe
+# odin tictactoe
 small web-game of tic-tac-toe
