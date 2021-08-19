@@ -1,5 +1,17 @@
 #container{
     display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
     height: 600px;
     width: 600px;
+    gap: 2px;
+}
+
+.box{
+    background-color: black;
+    font-size: 40px;
+}
+
+.legal{
+    cursor: pointer;
 }
