@@ -1,31 +1,42 @@
-const player = (playerIndex) => {
+const player = () => {
     let movesMade = []
 
     const registerPlayerMove = (cell) => {
         movesMade.push(cell)
     }
 
-    this.playerIndex = playerIndex
-
     return {
-        playerIndex,
         movesMade,
         registerPlayerMove
     }
 }
 
-const aiPlayer = ((playerIndex) => {
+const humanPlayer = () => {
+    const mode = "human"
+    return Object.assign(
+        {
+            mode
+        },
+        player()
+    )
+}
+
+const aiPlayer = (() => {
+
+    const mode = "ai"
+
     const makeRandomMove = (board) => {
         const moves = gameBoard.getLegalMoves(board)
-        const nextMove = moves[Math.round(Math.random() * moves.length)]
+        const nextMove = moves[Math.round(Math.random() * (moves.length-1))]
         return nextMove
     }
 
     return Object.assign(
         {
+            mode,
             makeRandomMove
         },
-        player(playerIndex)
+        player()
     )
 })
 
@@ -102,12 +113,11 @@ const displayControl = (() => {
     }
 
     const changeModeDisplay = function () {
-        console.log(this.classList)
-        if ((p1.className === "aiMode" || p2.className === "aiMode") && 
-        this.className === "playerMode"){
+        if ((p1.className === "aiMode" || p2.className === "aiMode") &&
+            this.className === "playerMode") {
             toggleModes(p1)
             toggleModes(p2)
-        } else{
+        } else {
             toggleModes(this)
         }
     }
@@ -128,13 +138,11 @@ const gameControl = (() => {
     const p1 = document.querySelector("#p1")
     const p2 = document.querySelector("#p2")
 
-    let player0 = player()
-    let player1 = player()
-
+    let player0 = humanPlayer()
+    let player1 = humanPlayer()
     let board = gameBoard.createBoard()
     let playerCounter = 0
     let gameEnded = false
-
 
     const turnControl = () => {
         if (playerCounter === 0) {
@@ -169,20 +177,18 @@ const gameControl = (() => {
         return (gameBoard.getLegalMoves(board).includes(cellNumber) ? true : false)
     };
 
-    const gameFlow = (board, cellNumber) => {
-        const playerIndex = turnControl()
+    const gameFlow = (playerIndex, board, cellNumber) => {
         gameBoard.setMove(board, cellNumber, playerIndex)
         logMoves(playerIndex, cellNumber)
         displayControl.displayMove(playerIndex, cellNumber)
         checkWin(playerIndex)
     }
 
-    const aiGameFlow = (board) => {
-        const nextCell = player1.makeRandomMove(board)
-        gameFlow(board, nextCell)
+    const aiGameFlow = (board, opponent) => {
+        const playerIndex = turnControl()
+        const nextCell = opponent.makeRandomMove(board)
+        gameFlow(playerIndex, board, nextCell)
     }
-
-
 
     // register click -> humanmove -> if ai -> aimove
     // register next click...
@@ -193,10 +199,23 @@ const gameControl = (() => {
     const registerPlayerMove = function () {
         const cellNumber = parseInt(this.id.slice(4))
         if (checkLegalMove(cellNumber) && !gameEnded) {
-            gameFlow(board, cellNumber)
-            // if(mode ==="aiMode"){
-            //     aiGameFlow(board)
-            // }
+            const playerIndex = turnControl()
+            gameFlow(playerIndex, board, cellNumber)
+            const aiPlayer = getAiPlayer()
+            if (!(aiPlayer === false) && !gameEnded) {
+                aiGameFlow(board, aiPlayer)
+            }
+        }
+    }
+
+    const getAiPlayer = () => {
+        if (player0.mode === "ai") {
+            return player0
+        }
+        else if (player1.mode === "ai") {
+            return player1
+        } else {
+            return false
         }
     }
 
@@ -208,60 +227,62 @@ const gameControl = (() => {
     }
 
     const reset = function () {
-        board = gameBoard.createBoard()
-        displayControl.resetBoard()
-        gameEnded = false;
-        if (p1.className === "playerMode"){
-            player0 = player()
-        } else{
-            player0 = aiPlayer()
+    board = gameBoard.createBoard()
+    displayControl.resetBoard()
+    gameEnded = false;
+    if (p1.className === "playerMode") {
+        player0 = humanPlayer()
+    } else {
+        player0 = aiPlayer()
+    }
+    if (p2.className === "playerMode") {
+        player1 = humanPlayer()
+    } else {
+        player1 = aiPlayer()
+    }
+    // player0 = createPlayer(p1)
+    // player1 = createPlayer(p2)
+    if (player0.mode === "ai") {
+        aiGameFlow(board, player0)
+    }
+}
+
+const restartButton = () => {
+    const _restart = document.querySelector("#restart")
+    _restart.addEventListener('click', reset)
+}
+
+const changeMode = () => {
+    p1.addEventListener('click', reset)
+    p2.addEventListener('click', reset)
+}
+
+const checkWin = (playerIndex) => {
+    const player = getPlayer(playerIndex)
+    for (let i = 0; i < winningSets.length; i++) {
+        const winCondition = winningSets[i]
+        if (winCondition.every(v => player.movesMade.includes(v))) {
+            console.log("WIN!!!!")
+            gameEnded = true
+            return true
         }
-        if (p2.className === "playerMode"){
-            player1 = player()
-        } else{
-            player1 = aiPlayer()
-        }
-
-
     }
+    return false
+}
 
-    const restartButton = () => {
-        const _restart = document.querySelector("#restart")
-        _restart.addEventListener('click', reset)
-    }
+const showBoardStatus = () => {
+    gameBoard.showBoardStatus(board)
+}
 
-    const changeMode = () => {
-        p1.addEventListener('click', reset)
-        p2.addEventListener('click', reset)
-    }
+registerClick()
+restartButton()
+changeMode()
 
-    const checkWin = (playerIndex) => {
-        const player = getPlayer(playerIndex)
-        for (let i = 0; i < winningSets.length; i++) {
-            const winCondition = winningSets[i]
-            if (winCondition.every(v => player.movesMade.includes(v))) {
-                console.log(player.movesMade)
-                console.log("WIN!!!!")
-                gameEnded = true
-                return true
-            }
-        }
-        return false
-    }
-
-    const showBoardStatus = () => {
-        gameBoard.showBoardStatus(board)
-    }
-
-    registerClick()
-    restartButton()
-    changeMode()
-
-    return {
-        p1,
-        p2,
-        showBoardStatus
-    }
-})();
+return {
+    p1,
+    p2,
+    showBoardStatus
+}
+    }) ();
 
 
