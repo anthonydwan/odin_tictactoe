@@ -1,3 +1,5 @@
+//  implement more getter functions
+
 const player = (playerIndex) => {
     this.playerIndex = playerIndex
 
@@ -7,23 +9,13 @@ const player = (playerIndex) => {
         movesMade.push(cell)
     };
 
-
-    const getPlayerIndex = () => {
-        return this.playerIndex
-    }
-
-    const checkWin = () => {
-        for (let i = 0; i < gameControl.winningSets.length; i++) {
-            const winCondition = gameControl.winningSets[i]
-            if (winCondition.every(v => movesMade.includes(v))) {
-                return true
-            }
-        } return false
-    }
-
     return {
-        checkWin,
-        getPlayerIndex,
+        get playerIndex() {
+            return playerIndex
+        },
+        get movesMade() {
+            return movesMade
+        },
         registerPlayerMove
     }
 }
@@ -36,7 +28,7 @@ const humanPlayer = (playerIndex) => {
         },
         player(playerIndex)
     )
-}
+};
 
 const aiPlayer = (playerIndex) => {
 
@@ -48,16 +40,142 @@ const aiPlayer = (playerIndex) => {
         return nextMove
     }
 
-    gameControl.winningSets
+    const predictLegalMoves = (predictBoard) => {
+        let legalCells = []
+        for (cell in predictBoard) {
+            if (predictBoard[cell] === "_") {
+                legalCells.push(parseInt(cell))
+            }
+        }
+        return legalCells
+    }
+
+    const makeBestMove = () => {
+        let predictBoard = { ...gameBoard.board }
+        let predictOppMoves = [...gameControl.getHumanPlayer().movesMade]
+        let predictSelfMoves = [...gameControl.getAiPlayer().movesMade]
+        let bestMove = predictBestMove("ai",
+            predictBoard,
+            predictSelfMoves,
+            predictOppMoves)
+
+        return bestMove
+    }
+
+    const gameScore = (player, move, predictBoard, depth) => {
+        if (player === "ai" && predictWin(move)) {
+            return 150 - depth
+        }
+        else if (player === "human" && predictWin(move)) {
+            return -100 + depth
+        }
+        else if (predictDraw(predictBoard)) {
+            return 0
+        }
+    }
+
+    const predictWin = (move) => {
+        for (let i = 0; i < gameControl.winningSets.length; i++) {
+            const winCondition = gameControl.winningSets[i]
+            if (winCondition.every(v => move.includes(v))) {
+                return true
+            }
+        } return false
+    }
+
+    const predictDraw = (predictBoard) => {
+        if (Object.keys(predictBoard).every((k) => predictBoard[k] != "_")) {
+            return true
+        }
+        return false
+    }
+
+    // makeBestmove (ai) -> find bestscore of nextmove -> makeBestmove(human)
+    const minimax = (player, predictBoard, predictSelfMoves, predictOppMoves, depth) => {
+        if (player === "ai") {
+            result = gameScore(player, predictSelfMoves, predictBoard, depth)
+        } else if (player === "human") {
+            result = gameScore(player, predictOppMoves, predictBoard, depth)
+        }
+        // recursion ends when the move leads to an end
+        if (result != null) {
+            return result
+        } else {
+            // recursion on minimax 
+            const moves = predictLegalMoves(predictBoard)
+            if (player === "ai") {
+                let bestScore = -Infinity;
+                for (let i = 0; i < moves.length; i++) {
+                    const move = moves[i]
+                    // maximise score for ai 
+                    predictSelfMoves.push(move)
+                    predictBoard[move] = playerIndex
+                    // find the score of the board assuming we made the move
+                    let score = minimax("human", predictBoard, predictSelfMoves, predictOppMoves, depth+1)
+                    // reverse it so we don't fill up the board before next turn 
+                    predictBoard[move] = "_";
+                    predictSelfMoves.pop();
+                    bestScore = Math.max(score, bestScore);
+                }
+                return bestScore
+            } else if (player === "human") {
+                let bestScore = Infinity;
+                for (let i = 0; i < moves.length; i++) {
+                    const move = moves[i]
+                    // minimise score for ai 
+                    predictOppMoves.push(move)
+                    predictBoard[move] = gameControl.getHumanPlayer().playerIndex
+                    // find the score of the board assuming we made the move
+                    let score = minimax("ai", predictBoard, predictSelfMoves, predictOppMoves, depth+1)
+                    // reverse it so we don't fill up the board before next turn 
+                    predictBoard[move] = "_";
+                    predictOppMoves.pop();
+                    bestScore = Math.min(score, bestScore);
+                }
+                return bestScore
+            }
+        }
+    }
+
+    const predictBestMove = (
+        player,
+        predictBoard,
+        predictSelfMoves,
+        predictOppMoves) => {
+        let bestScore = -Infinity;;
+        let bestMove;
+        const moves = predictLegalMoves(predictBoard)
+        for (let i = 0; i < moves.length; i++) {
+            const move = moves[i]
+            // maximise score for ai 
+            predictSelfMoves.push(move)
+            predictBoard[move] = playerIndex
+            // find the score of the board assuming we made the move
+            let score = minimax("human", predictBoard, predictSelfMoves, predictOppMoves, 0)
+            // reverse it so we don't fill up the board before next turn 
+            predictBoard[move] = "_";
+            predictSelfMoves.pop()
+            if (score > bestScore) {
+                bestScore = score;
+                bestMove = move;
+            }
+        }
+        return bestMove
+    }
+
+
+    // human will min score
+
 
     return Object.assign(
         {
             mode,
-            makeRandomMove
+            makeRandomMove,
+            makeBestMove
         },
         player(playerIndex)
     )
-}
+};
 
 const gameBoard = (() => {
 
@@ -85,20 +203,15 @@ const gameBoard = (() => {
         board[cell] = sign
     }
 
-    const showBoardStatus = () => {
-        console.log(board)
-    }
-
     const resetBoard = () => {
         board = createBoard()
     }
 
     return {
-        get board(){
+        get board() {
             return board
         },
         resetBoard,
-        showBoardStatus,
         getLegalMoves,
         setMove
     }
@@ -210,12 +323,13 @@ const gameControl = (() => {
         displayControl.displayMove(playerIndex, cellNumber)
         checkWin(playerIndex)
         checkDraw()
+        checkGameEnd(playerIndex)
     }
 
     const aiGameFlow = (opponent) => {
         const board = gameBoard.board
         const playerIndex = turnControl()
-        const nextCell = opponent.makeRandomMove(board)
+        const nextCell = opponent.makeBestMove()
         gameFlow(playerIndex, nextCell)
     }
 
@@ -241,6 +355,15 @@ const gameControl = (() => {
             return false
         };
     };
+
+    const getHumanPlayer = () => {
+        if (player0.mode === "human") {
+            return player0
+        }
+        else if (player1.mode === "human") {
+            return player1
+        }
+    }
 
     const registerClick = () => {
         const boxes = document.querySelectorAll(".box")
@@ -281,39 +404,38 @@ const gameControl = (() => {
 
     const checkWin = (playerIndex) => {
         const player = getPlayer(playerIndex)
-        if (player.checkWin()) {
-            console.log(`Player ${playerIndex + 1} WIN!!!!`)
-            gameEnded = true
-        } else {
-            return false
-        }
+        for (let i = 0; i < gameControl.winningSets.length; i++) {
+            const winCondition = gameControl.winningSets[i]
+            if (winCondition.every(v => player.movesMade.includes(v))) {
+                console.log(`Player ${playerIndex + 1} WIN!!!!`)
+                return true
+            }
+        } return false
     }
 
+
     const checkDraw = () => {
-        if (gameBoard.getLegalMoves().length === 0){
-            gameEnded = true;
+        const legalMoves = gameBoard.getLegalMoves()
+        if (legalMoves.length === 0) {
             console.log("DRAW!")
             return true
         }
         return false
     }
 
+    const checkGameEnd = (playerIndex) => {
+        if (checkWin(playerIndex) || checkDraw()) {
+            gameEnded = true;
+        }
+    }
+
     registerClick()
     restartButton()
     changeMode()
 
-
-    const getPlayer0 = ()=>{
-        return player0
-    }
-
-    const getPlayer1 = ()=> {
-        return player1
-    }
-
     return {
+        getAiPlayer,
+        getHumanPlayer,
         winningSets
     }
 })();
-
-
