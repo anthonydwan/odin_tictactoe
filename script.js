@@ -50,18 +50,6 @@ const aiPlayer = (playerIndex) => {
         return legalCells
     }
 
-    const makeBestMove = () => {
-        let predictBoard = { ...gameBoard.board }
-        let predictOppMoves = [...gameControl.getHumanPlayer().movesMade]
-        let predictSelfMoves = [...gameControl.getAiPlayer().movesMade]
-        let bestMove = predictBestMove("ai",
-            predictBoard,
-            predictSelfMoves,
-            predictOppMoves)
-
-        return bestMove
-    }
-
     const gameScore = (player, move, predictBoard, depth) => {
         if (player === "ai" && predictWin(move)) {
             return 150 - depth
@@ -111,7 +99,7 @@ const aiPlayer = (playerIndex) => {
                     predictSelfMoves.push(move)
                     predictBoard[move] = playerIndex
                     // find the score of the board assuming we made the move
-                    let score = minimax("human", predictBoard, predictSelfMoves, predictOppMoves, depth+1)
+                    let score = minimax("human", predictBoard, predictSelfMoves, predictOppMoves, depth + 1)
                     // reverse it so we don't fill up the board before next turn 
                     predictBoard[move] = "_";
                     predictSelfMoves.pop();
@@ -126,7 +114,7 @@ const aiPlayer = (playerIndex) => {
                     predictOppMoves.push(move)
                     predictBoard[move] = gameControl.getHumanPlayer().playerIndex
                     // find the score of the board assuming we made the move
-                    let score = minimax("ai", predictBoard, predictSelfMoves, predictOppMoves, depth+1)
+                    let score = minimax("ai", predictBoard, predictSelfMoves, predictOppMoves, depth + 1)
                     // reverse it so we don't fill up the board before next turn 
                     predictBoard[move] = "_";
                     predictOppMoves.pop();
@@ -137,12 +125,11 @@ const aiPlayer = (playerIndex) => {
         }
     }
 
-    const predictBestMove = (
-        player,
-        predictBoard,
-        predictSelfMoves,
-        predictOppMoves) => {
-        let bestScore = -Infinity;;
+    const makeBestMove = () => {
+        let predictBoard = { ...gameBoard.board }
+        let predictOppMoves = [...gameControl.getHumanPlayer().movesMade]
+        let predictSelfMoves = [...gameControl.getAiPlayer().movesMade]
+        let bestScore = -Infinity;
         let bestMove;
         const moves = predictLegalMoves(predictBoard)
         for (let i = 0; i < moves.length; i++) {
@@ -162,10 +149,6 @@ const aiPlayer = (playerIndex) => {
         }
         return bestMove
     }
-
-
-    // human will min score
-
 
     return Object.assign(
         {
