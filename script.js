@@ -1,4 +1,5 @@
-const player = () => {
+const player = (playerIndex) => {
+    this.playerIndex = playerIndex
 
     let movesMade = []
 
@@ -6,27 +7,38 @@ const player = () => {
         movesMade.push(cell)
     };
 
-    const getMovesMade = ()=> {
-        return movesMade
+
+    const getPlayerIndex = () => {
+        return this.playerIndex
+    }
+
+    const checkWin = () => {
+        for (let i = 0; i < gameControl.winningSets.length; i++) {
+            const winCondition = gameControl.winningSets[i]
+            if (winCondition.every(v => movesMade.includes(v))) {
+                return true
+            }
+        } return false
     }
 
     return {
-        getMovesMade,
+        checkWin,
+        getPlayerIndex,
         registerPlayerMove
     }
 }
 
-const humanPlayer = () => {
+const humanPlayer = (playerIndex) => {
     const mode = "human"
     return Object.assign(
         {
             mode
         },
-        player()
+        player(playerIndex)
     )
 }
 
-const aiPlayer = (() => {
+const aiPlayer = (playerIndex) => {
 
     const mode = "ai"
 
@@ -36,17 +48,18 @@ const aiPlayer = (() => {
         return nextMove
     }
 
+    gameControl.winningSets
+
     return Object.assign(
         {
             mode,
             makeRandomMove
         },
-        player()
+        player(playerIndex)
     )
-})
+}
 
 const gameBoard = (() => {
-    // create the board logic in the game
 
     const createBoard = () => {
         let board = {}
@@ -76,16 +89,14 @@ const gameBoard = (() => {
         console.log(board)
     }
 
-    const resetBoard = ()=>{
+    const resetBoard = () => {
         board = createBoard()
     }
 
-    const getBoard = () =>{
-        return board
-    }
-
     return {
-        getBoard,
+        get board(){
+            return board
+        },
         resetBoard,
         showBoardStatus,
         getLegalMoves,
@@ -153,9 +164,8 @@ const gameControl = (() => {
     const p1 = document.querySelector("#p1")
     const p2 = document.querySelector("#p2")
 
-    let turn = 0;
-    let player0 = humanPlayer();
-    let player1 = humanPlayer();
+    let player0 = humanPlayer(0);
+    let player1 = humanPlayer(1);
     let playerCounter = 0;
     let gameEnded = false;
 
@@ -189,22 +199,21 @@ const gameControl = (() => {
     };
 
     const checkLegalMove = (cellNumber) => {
-        const board = gameBoard.getBoard()
+        const board = gameBoard.board
         return (gameBoard.getLegalMoves(board).includes(cellNumber) ? true : false)
     };
 
     const gameFlow = (playerIndex, cellNumber) => {
-        const board = gameBoard.getBoard()
+        const board = gameBoard.board
         gameBoard.setMove(cellNumber, playerIndex)
         logMoves(playerIndex, cellNumber)
         displayControl.displayMove(playerIndex, cellNumber)
         checkWin(playerIndex)
-        checkDraw(turn)
-        turn++
+        checkDraw()
     }
 
     const aiGameFlow = (opponent) => {
-        const board = gameBoard.getBoard()
+        const board = gameBoard.board
         const playerIndex = turnControl()
         const nextCell = opponent.makeRandomMove(board)
         gameFlow(playerIndex, nextCell)
@@ -240,22 +249,21 @@ const gameControl = (() => {
         };
     };
 
-    const createPlayer = (playerObject) => {
+    const createPlayer = (playerObject, playerIndex) => {
         if (playerObject.className === "playerMode") {
-            return humanPlayer()
+            return humanPlayer(playerIndex)
         } else {
-            return aiPlayer()
+            return aiPlayer(playerIndex)
         }
     }
 
     const reset = function () {
-        turn = 0
         playerCounter = 0
         gameBoard.resetBoard()
         displayControl.resetBoard()
         gameEnded = false;
-        player0 = createPlayer(p1)
-        player1 = createPlayer(p2)
+        player0 = createPlayer(p1, 0)
+        player1 = createPlayer(p2, 1)
         if (player0.mode === "ai") {
             aiGameFlow(player0)
         }
@@ -273,20 +281,16 @@ const gameControl = (() => {
 
     const checkWin = (playerIndex) => {
         const player = getPlayer(playerIndex)
-        for (let i = 0; i < winningSets.length; i++) {
-            const winCondition = winningSets[i]
-            console.log(player.getMovesMade)
-            if (winCondition.every(v => player.getMovesMade().includes(v))) {
-                console.log(`Player ${playerIndex +1} WIN!!!!`)
-                gameEnded = true
-                return true
-            }
+        if (player.checkWin()) {
+            console.log(`Player ${playerIndex + 1} WIN!!!!`)
+            gameEnded = true
+        } else {
+            return false
         }
-        return false
     }
 
-    const checkDraw = (turn) => {
-        if (turn === 8 && !gameEnded){
+    const checkDraw = () => {
+        if (gameBoard.getLegalMoves().length === 0){
             gameEnded = true;
             console.log("DRAW!")
             return true
@@ -294,10 +298,18 @@ const gameControl = (() => {
         return false
     }
 
-
     registerClick()
     restartButton()
     changeMode()
+
+
+    const getPlayer0 = ()=>{
+        return player0
+    }
+
+    const getPlayer1 = ()=> {
+        return player1
+    }
 
     return {
         winningSets
