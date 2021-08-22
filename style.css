@@ -13,29 +13,21 @@ html{
 #objectContainer{
     display: grid;
     grid-template-rows: 80px 60px 80px 400px 80px 60px;
-    grid-template-columns: 400px;
+    grid-template-columns: 400px 60px;
+    grid-template-areas: "heading githubdiv"
+                        "topPrompt  ."
+                        "topButtons ."
+                        "container ."
+                        "bottomButton ."
+                        "prompt .";
     margin: 20px auto;
     height: 760px;
-    width: 400px;
-    padding: 20px 60px;
-    border: 4px solid black;
+    width: 460px;
+    padding: 20px;
+    padding-left: 60px;
+    padding-right: 0px;
     border-radius: 10px;
     background-color: rgba(255, 255, 255, 0.89);
-}
-
-#topPrompt{
-    display: flex;
-    justify-content: space-between;
-    align-content: center;
-}
-
-#topPrompt>div{
-    line-height: 3;
-    font-size: 20px;
-    text-align: center;
-
-    padding: 5px;
-    width: 130px;
 }
 
 #heading{
@@ -43,12 +35,33 @@ html{
     font-weight: 800px;
     text-align: center;
     font-family: 'Rubik', sans-serif;
+    grid-area: heading;
+}
+
+
+#topPrompt{
+    display: flex;
+    justify-content: space-between;
+    align-content: center;
+    grid-area: topPrompt;
+}
+
+#topButtons{
+    grid-area: topButtons;
+}
+
+#topPrompt>div{
+    line-height: 3;
+    font-size: 20px;
+    text-align: center;
+    width: 130px;
+    padding-top: 10px;
 }
 
 .fancy{
     display: inline-block;
     position:relative;
-    width: 60px;
+    width: 58px;
     height: 80px;
 }
 
@@ -58,13 +71,14 @@ html{
     font-weight: 800;
     position: absolute;
     top: 10px;
-    left: 3px;
+    left: 1px;
 }
 
 #X{
-    left: 8px;
+    left: 6px;
     color: #1A2930;
 }
+
 
 #container{
     display: grid;
@@ -73,6 +87,7 @@ html{
     height: 400px;
     width: 400px;
     gap: 5px;
+    grid-area: container;
 }
 
 button{
@@ -86,8 +101,117 @@ button{
     transition: all 0.2s ease-in-out;
 }
 
+@-webkit-keyframes buzz-out-on-hover {
+    10% {
+      -webkit-transform: translateX(3px) rotate(2deg);
+      transform: translateX(3px) rotate(2deg);
+    }
+    20% {
+      -webkit-transform: translateX(-3px) rotate(-2deg);
+      transform: translateX(-3px) rotate(-2deg);
+    }
+    30% {
+      -webkit-transform: translateX(3px) rotate(2deg);
+      transform: translateX(3px) rotate(2deg);
+    }
+    40% {
+      -webkit-transform: translateX(-3px) rotate(-2deg);
+      transform: translateX(-3px) rotate(-2deg);
+    }
+    50% {
+      -webkit-transform: translateX(2px) rotate(1deg);
+      transform: translateX(2px) rotate(1deg);
+    }
+    60% {
+      -webkit-transform: translateX(-2px) rotate(-1deg);
+      transform: translateX(-2px) rotate(-1deg);
+    }
+    70% {
+      -webkit-transform: translateX(2px) rotate(1deg);
+      transform: translateX(2px) rotate(1deg);
+    }
+    80% {
+      -webkit-transform: translateX(-2px) rotate(-1deg);
+      transform: translateX(-2px) rotate(-1deg);
+    }
+    90% {
+      -webkit-transform: translateX(1px) rotate(0);
+      transform: translateX(1px) rotate(0);
+    }
+    100% {
+      -webkit-transform: translateX(-1px) rotate(0);
+      transform: translateX(-1px) rotate(0);
+    }
+  }
+  @keyframes buzz-out-on-hover {
+    10% {
+      -webkit-transform: translateX(3px) rotate(2deg);
+      transform: translateX(3px) rotate(2deg);
+    }
+    20% {
+      -webkit-transform: translateX(-3px) rotate(-2deg);
+      transform: translateX(-3px) rotate(-2deg);
+    }
+    30% {
+      -webkit-transform: translateX(3px) rotate(2deg);
+      transform: translateX(3px) rotate(2deg);
+    }
+    40% {
+      -webkit-transform: translateX(-3px) rotate(-2deg);
+      transform: translateX(-3px) rotate(-2deg);
+    }
+    50% {
+      -webkit-transform: translateX(2px) rotate(1deg);
+      transform: translateX(2px) rotate(1deg);
+    }
+    60% {
+      -webkit-transform: translateX(-2px) rotate(-1deg);
+      transform: translateX(-2px) rotate(-1deg);
+    }
+    70% {
+      -webkit-transform: translateX(2px) rotate(1deg);
+      transform: translateX(2px) rotate(1deg);
+    }
+    80% {
+      -webkit-transform: translateX(-2px) rotate(-1deg);
+      transform: translateX(-2px) rotate(-1deg);
+    }
+    90% {
+      -webkit-transform: translateX(1px) rotate(0);
+      transform: translateX(1px) rotate(0);
+    }
+    100% {
+      -webkit-transform: translateX(-1px) rotate(0);
+      transform: translateX(-1px) rotate(0);
+    }
+  }
+  .buzz-out-on-hover {
+    display: inline-block;
+    vertical-align: middle;
+    -webkit-transform: perspective(1px) translateZ(0);
+    transform: perspective(1px) translateZ(0);
+    box-shadow: 0 0 1px rgba(0, 0, 0, 0);
+  }
+  .buzz-out-on-hover:hover, .buzz-out-on-hover:focus, .buzz-out-on-hover:active {
+    -webkit-animation-name: buzz-out-on-hover;
+    animation-name: buzz-out-on-hover;
+    -webkit-animation-duration: 0.75s;
+    animation-duration: 0.75s;
+    -webkit-animation-timing-function: linear;
+    animation-timing-function: linear;
+    -webkit-animation-iteration-count: 1;
+    animation-iteration-count: 1;
+  }
+
 #topButtons>button{
     width: 130px;
+}
+
+#github, #githubImg{
+    position: relative;
+    height: 28px;
+    width: 28px;
+    top: 5px;
 }
 
 button:hover{
@@ -108,6 +232,14 @@ button:active{
     transition: all 0.2s ease-in-out;
     text-align: center;
     font-size: 30px;
+}
+
+#bottomButton{
+    grid-area: bottomButton;
+}
+
+#prompt{
+    grid-area: prompt;
 }
 
 .box{
