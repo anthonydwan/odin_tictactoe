@@ -139,7 +139,7 @@ const aiPlayer = (playerIndex) => {
             predictBoard[move] = playerIndex
             // find the score of the board assuming we made the move
             let score = minimax("human", predictBoard, predictSelfMoves, predictOppMoves, 0)
-            // reverse it so we don't fill up the board before next turn 
+            // reverse move made so we don't fill up the board before next prediction
             predictBoard[move] = "_";
             predictSelfMoves.pop()
             if (score > bestScore) {
@@ -205,6 +205,15 @@ const displayControl = (() => {
     const p1 = document.querySelector("#p1")
     const p2 = document.querySelector("#p2")
 
+    const displaySymbol = (playerIndex)=>{
+        const symbol = document.createElement("p")
+        if (playerIndex === 0){
+            return "X"
+        } else{
+            return "O"
+        }
+    }
+
     const createBoard = () => {
         for (let i = 0; i < 9; i++) {
             const box = document.createElement("div")
@@ -221,12 +230,14 @@ const displayControl = (() => {
     const displayMove = (playerIndex, cellNumber) => {
         const div = getCellDiv(cellNumber)
         div.classList.add(`player${playerIndex}`)
+        div.textContent = displaySymbol(playerIndex)
     };
 
     const resetBoard = () => {
         for (let i = 0; i < 9; i++) {
             const div = getCellDiv(i)
             div.classList.remove("player0", "player1")
+            div.textContent = ""
         };
     };
 
@@ -245,11 +256,20 @@ const displayControl = (() => {
         };
     };
 
+    const toggleGameEndText = (mode="show") =>{
+        const prompt = document.querySelector("#prompt")
+        if (mode==="show"){
+            prompt.classList.remove("hidden")
+        } else if (mode ==="hide")
+            prompt.classList.add("hidden")
+    }
+
     createBoard()
     p1.addEventListener('click', changeModeDisplay)
     p2.addEventListener('click', changeModeDisplay)
 
     return {
+        toggleGameEndText,
         displayMove,
         resetBoard
     };
@@ -368,6 +388,7 @@ const gameControl = (() => {
         gameBoard.resetBoard()
         displayControl.resetBoard()
         gameEnded = false;
+        displayControl.toggleGameEndText(mode="hide")
         player0 = createPlayer(p1, 0)
         player1 = createPlayer(p2, 1)
         if (player0.mode === "ai") {
@@ -389,8 +410,10 @@ const gameControl = (() => {
         const player = getPlayer(playerIndex)
         for (let i = 0; i < gameControl.winningSets.length; i++) {
             const winCondition = gameControl.winningSets[i]
+            const prompt = document.querySelector("#prompt")
             if (winCondition.every(v => player.movesMade.includes(v))) {
-                console.log(`Player ${playerIndex + 1} WIN!!!!`)
+                prompt.textContent = `P${playerIndex + 1} WIN!`
+                displayControl.toggleGameEndText()
                 return true
             }
         } return false
@@ -400,7 +423,8 @@ const gameControl = (() => {
     const checkDraw = () => {
         const legalMoves = gameBoard.getLegalMoves()
         if (legalMoves.length === 0) {
-            console.log("DRAW!")
+            prompt.textContent = "DRAW!"
+            displayControl.toggleGameEndText()
             return true
         }
         return false
