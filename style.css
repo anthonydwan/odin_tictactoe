@@ -45,10 +45,25 @@ html{
     font-family: 'Rubik', sans-serif;
 }
 
-#heading>span{
+.fancy{
+    display: inline-block;
+    position:relative;
+    width: 60px;
+    height: 80px;
+}
+
+.fancy>span{
     color: #FFCD24;
     font-family: 'Kodchasan', sans-serif;
     font-weight: 800;
+    position: absolute;
+    top: 10px;
+    left: 3px;
+}
+
+#X{
+    left: 8px;
+    color: #1A2930;
 }
 
 #container{

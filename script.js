@@ -50,11 +50,11 @@ const aiPlayer = (playerIndex) => {
         return legalCells
     }
 
-    const gameScore = (player, move, predictBoard, depth) => {
-        if (player === "ai" && predictWin(move)) {
-            return 150 - depth
+    const gameScore = (predictSelfMoves, predictOppMoves, predictBoard, depth) => {
+        if (predictWin(predictSelfMoves)) {
+            return 100 - depth
         }
-        else if (player === "human" && predictWin(move)) {
+        else if (predictWin(predictOppMoves)) {
             return -100 + depth
         }
         else if (predictDraw(predictBoard)) {
@@ -80,11 +80,7 @@ const aiPlayer = (playerIndex) => {
 
     // makeBestmove (ai) -> find bestscore of nextmove -> makeBestmove(human)
     const minimax = (player, predictBoard, predictSelfMoves, predictOppMoves, depth) => {
-        if (player === "ai") {
-            result = gameScore(player, predictSelfMoves, predictBoard, depth)
-        } else if (player === "human") {
-            result = gameScore(player, predictOppMoves, predictBoard, depth)
-        }
+        result = gameScore(predictSelfMoves, predictOppMoves, predictBoard, depth)
         // recursion ends when the move leads to an end
         if (result != null) {
             return result
@@ -204,6 +200,8 @@ const displayControl = (() => {
     const _container = document.querySelector("#container")
     const p1 = document.querySelector("#p1")
     const p2 = document.querySelector("#p2")
+    const O = document.querySelector("#O")
+    const X = document.querySelector("#X")
 
     const displaySymbol = (playerIndex)=>{
         const symbol = document.createElement("p")
@@ -256,6 +254,11 @@ const displayControl = (() => {
         };
     };
 
+    toggleHiddenClass = (e) =>{
+        O.classList.toggle("hidden")
+        X.classList.toggle("hidden")
+    }
+
     const toggleGameEndText = (mode="show") =>{
         const prompt = document.querySelector("#prompt")
         if (mode==="show"){
@@ -267,6 +270,8 @@ const displayControl = (() => {
     createBoard()
     p1.addEventListener('click', changeModeDisplay)
     p2.addEventListener('click', changeModeDisplay)
+    X.addEventListener("mouseover", toggleHiddenClass)
+    X.addEventListener("mouseleave", toggleHiddenClass)
 
     return {
         toggleGameEndText,
@@ -284,6 +289,7 @@ const gameControl = (() => {
     let player1 = humanPlayer(1);
     let playerCounter = 0;
     let gameEnded = false;
+    const prompt = document.querySelector("#prompt")
 
     const turnControl = () => {
         if (playerCounter === 0) {
@@ -410,7 +416,6 @@ const gameControl = (() => {
         const player = getPlayer(playerIndex)
         for (let i = 0; i < gameControl.winningSets.length; i++) {
             const winCondition = gameControl.winningSets[i]
-            const prompt = document.querySelector("#prompt")
             if (winCondition.every(v => player.movesMade.includes(v))) {
                 prompt.textContent = `P${playerIndex + 1} WIN!`
                 displayControl.toggleGameEndText()
